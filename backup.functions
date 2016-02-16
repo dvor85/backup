@@ -1,0 +1,95 @@
+#!/bin/bash
+
+backup()
+{
+    [[ -n "$1" ]] && SOURCE_DIR="$1" || return 1
+    [[ -n "$2" ]] && ROOT_DIR="$2" || return 1
+    [[ ! -e $EXCLUDE ]] && EXCLUDE=/dev/null
+
+    DEST_DIR="$ROOT_DIR/$(date +%G-%V)"; #weekly
+    #DEST_DIR=`date +%Y-%m`; #monthly
+    #DEST_DIR=`date +%Y`-$(( (`date +%m`-1)/3+1 )); #quarterly
+
+    mkdir -p "$DEST_DIR";
+tar --create --recursion --preserve-permissions --totals --sparse --ignore-failed-read --gzip \
+ --file="$DEST_DIR/$(date +%F-%s).tar.gz" \
+ --listed-incremental="$DEST_DIR/backup.snar" \
+ --one-file-system \
+ --verbose \
+ --exclude-backups \
+ --exclude-from="$EXCLUDE" \
+ --index-file="$DEST_DIR/$(date +%F-%s).log" \
+ $SOURCE_DIR; 
+
+    ln -fns "$DEST_DIR" "$ROOT_DIR/last"
+
+    prev_week="$ROOT_DIR/$(date -d "$WEEKS weeks ago" +%G-%V)"
+    if [[ -d "$prev_week" ]]; then
+        rm -rf "$prev_week"
+    fi
+    return 0;
+}
+
+lvm_backup()
+{
+    [[ -n $1 ]] && lvpath="$1" || return 1
+    [[ -n $2 ]] && preffix="$2" || preffix=""
+    
+    lvname=$(basename $lvpath)
+    vg_lv=$(echo $1 | sed 's#/#-#g')
+    bakname="${lvname}_$(echo $preffix | sed 's#/#_#g')"
+    mnt_snap="/mnt/snap"
+    mount_opt="ro"
+    local mpoint fstype
+    
+    #mpoint=$(sed -n "/$vg_lv /p" /proc/mounts | awk '{print $2}')    
+    #fstype=$(sed -n "/$vg_lv /p" /proc/mounts | awk '{print $3}')    
+    while read a b c d; do
+        if [[ -n $(echo $a | sed -n "/$vg_lv\$/p") ]]; then
+            mpoint=$b
+            fstype=$c
+            break
+        fi;
+    done < /proc/mounts;
+    #echo $mpoint $fstype;
+    #exit;
+    
+    if [[ $fstype = "xfs" ]]; then
+        mount_opt="$mount_opt,nouuid" 
+        xfs_freeze -f $mpoint
+    fi;
+    if lvcreate -s -n "${lvname}-snap" -L 1G -p r $lvpath; then
+        if [[ $fstype = "xfs" ]]; then
+            xfs_freeze -u $mpoint
+        fi;
+        mkdir -p "$mnt_snap"
+        if mount -o $mount_opt "/dev/${lvpath}-snap" "$mnt_snap"; then
+            backup "$mnt_snap/$preffix" "$BACKUP_ROOTDIR/$bakname";
+            umount "/dev/${lvpath}-snap"
+        fi;
+        rm -rf "$mnt_snap"
+        lvremove -f "${lvpath}-snap"
+    else
+        if [[ $fstype = "xfs" ]]; then
+            xfs_freeze -u $mpoint
+        fi;
+    fi;
+    
+}
+
+mysql_backup()
+{
+    [[ -n $1 ]] && user="$1" || return 1
+    [[ -n $2 ]] && pass="$2" || return 1
+
+    dest="$BACKUP_ROOTDIR/mysqldump"
+    mkdir -p $dest
+
+    for i in $(mysql -u $user -p$pass -e'show databases;' | grep -v information_schema | grep -v Database); do
+        mysqldump --lock-tables -u $user -p$pass $i > $dest/mysqldump-$i.sql;
+    done;
+    backup "$dest" "$BACKUP_ROOTDIR/mysql"
+    rm -rf "$dest"
+}
+
+

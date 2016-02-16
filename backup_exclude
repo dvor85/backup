@@ -1,0 +1,17 @@
+*.avi
+*.mp4
+*.mp3
+*.wav
+*.wma
+*.zip
+*.rar
+*.iso
+*.jpg
+*.bmp
+*.exe
+*.msi
+*.tmp
+*.7z
+*.bz2
+*.old
+*.[0-9tar]*.gz
