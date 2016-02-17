@@ -49,30 +49,32 @@ lvm_backup()
     vg_lv=$(echo $1 | sed 's#/#-#g')
     bakname=${lvname}
     [[ -n $preffix ]] && bakname="$bakname_$(echo $preffix | sed 's#/#_#g')"
-    mnt_snap="/mnt/snap"
+    mnt_snap="/mnt/snap"    
     mount_opt="ro"
-    local mpoint fstype
-    
+    fstype=$(blkid -o value -s TYPE "/dev/$lvpath")
+
+
     #mpoint=$(sed -n "/$vg_lv /p" /proc/mounts | awk '{print $2}')    
     #fstype=$(sed -n "/$vg_lv /p" /proc/mounts | awk '{print $3}')    
-    while read a b c d; do
-        if [[ -n $(echo $a | sed -n "/$vg_lv\$/p") ]]; then
-            mpoint=$b
-            fstype=$c
-            break
-        fi;
-    done < /proc/mounts;
+    #while read a b c d; do
+    #    if [[ -n $(echo $a | sed -n "/$vg_lv\$/p") ]]; then
+    #        mpoint=$b
+    #        fstype=$c
+    #        break
+    #    fi;
+    #done < /proc/mounts;
     #echo $mpoint $fstype;
     #exit;
+
     
     if [[ $fstype = "xfs" ]]; then
-        mount_opt="$mount_opt,nouuid" 
-        xfs_freeze -f $mpoint
+        mount_opt="$mount_opt,nouuid,norecovery" 
+        #xfs_freeze -f $mpoint
     fi;
-    if lvcreate -s -n "${lvname}-snap" -L 1G -p r $lvpath; then
-        if [[ $fstype = "xfs" ]]; then
-            xfs_freeze -u $mpoint
-        fi;
+    if lvcreate -s -n "${lvname}-snap" -l 1%ORIGIN -p r $lvpath; then
+        #if [[ $fstype = "xfs" ]]; then
+            #xfs_freeze -u $mpoint
+        #fi;
         mkdir -p "$mnt_snap"
         if mount -o $mount_opt "/dev/${lvpath}-snap" "$mnt_snap"; then
             backup "$mnt_snap/$preffix" "$BACKUP_ROOTDIR/$bakname";
@@ -80,10 +82,10 @@ lvm_backup()
         fi;
         rm -rf "$mnt_snap"
         lvremove -f "${lvpath}-snap"
-    else
-        if [[ $fstype = "xfs" ]]; then
-            xfs_freeze -u $mpoint
-        fi;
+    #else
+    #    if [[ $fstype = "xfs" ]]; then
+    #        xfs_freeze -u $mpoint
+    #    fi;
     fi;
     return 0
 }
