@@ -44,12 +44,10 @@ tar --create --recursion --preserve-permissions --totals --sparse --ignore-faile
 lvm_backup()
 {
     [[ -n $1 ]] && lvpath="$1" || return 1
-    [[ -n $2 ]] && subdir="$2" || subdir=""
+    [[ -n $2 ]] && subdirs=${@:2} || subdirs=""
     
     lvname=$(basename $lvpath)
     vg_lv=$(echo "$1" | sed 's#/#-#g')
-    bakname=${lvpath}
-    [[ -n $subdir ]] && bakname="${bakname}-$(echo $subdir | sed 's#/#-#g')"
     mnt_snap="/mnt/$vg_lv"
     mount_opt="ro"
     fstype=$(blkid -o value -s TYPE "/dev/$lvpath")
@@ -78,7 +76,13 @@ lvm_backup()
         #fi;
         mkdir -p "$mnt_snap"
         if mount -o $mount_opt "/dev/${lvpath}-snap" "$mnt_snap"; then
-            backup "$mnt_snap/$subdir" "$BACKUP_ROOTDIR/$bakname";
+            if [[ -n "$subdirs" ]]; then
+                for subdir in $subdirs; do
+                    backup "$mnt_snap/$subdir" "$BACKUP_ROOTDIR/$lvpath/$subdir";
+                done;
+            else
+                backup "$mnt_snap" "$BACKUP_ROOTDIR/$lvpath";
+            fi;
             umount "/dev/${lvpath}-snap"
         fi;
         rm -rf "$mnt_snap"
