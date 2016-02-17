@@ -20,15 +20,16 @@ backup()
     esac
 
     DEST_DIR="$ROOT_DIR/$(date +$FORMAT)";
+    FILE_DATE=$(date +%F-%s)
     mkdir -p "$DEST_DIR";
 tar --create --recursion --preserve-permissions --totals --sparse --ignore-failed-read --gzip \
- --file="$DEST_DIR/$(date +%F-%s).tar.gz" \
+ --file="$DEST_DIR/$FILE_DATE.tar.gz" \
  --listed-incremental="$DEST_DIR/backup.snar" \
  --one-file-system \
  --verbose \
  --exclude-backups \
  --exclude-from="$EXCLUDE" \
- --index-file="$DEST_DIR/$(date +%F-%s).log" \
+ --index-file="$DEST_DIR/$FILE_DATE.log" \
  $SOURCE_DIR; 
 
     ln -fns "$DEST_DIR" "$ROOT_DIR/last"
@@ -43,13 +44,13 @@ tar --create --recursion --preserve-permissions --totals --sparse --ignore-faile
 lvm_backup()
 {
     [[ -n $1 ]] && lvpath="$1" || return 1
-    [[ -n $2 ]] && preffix="$2" || preffix=""
+    [[ -n $2 ]] && subdir="$2" || subdir=""
     
     lvname=$(basename $lvpath)
-    vg_lv=$(echo $1 | sed 's#/#-#g')
-    bakname=${lvname}
-    [[ -n $preffix ]] && bakname="$bakname_$(echo $preffix | sed 's#/#_#g')"
-    mnt_snap="/mnt/snap"    
+    vg_lv=$(echo "$1" | sed 's#/#-#g')
+    bakname=${lvpath}
+    [[ -n $subdir ]] && bakname="${bakname}-$(echo $subdir | sed 's#/#-#g')"
+    mnt_snap="/mnt/$vg_lv"
     mount_opt="ro"
     fstype=$(blkid -o value -s TYPE "/dev/$lvpath")
 
@@ -77,7 +78,7 @@ lvm_backup()
         #fi;
         mkdir -p "$mnt_snap"
         if mount -o $mount_opt "/dev/${lvpath}-snap" "$mnt_snap"; then
-            backup "$mnt_snap/$preffix" "$BACKUP_ROOTDIR/$bakname";
+            backup "$mnt_snap/$subdir" "$BACKUP_ROOTDIR/$bakname";
             umount "/dev/${lvpath}-snap"
         fi;
         rm -rf "$mnt_snap"
@@ -95,14 +96,14 @@ mysql_backup()
     [[ -n $1 ]] && user="$1" || return 1
     [[ -n $2 ]] && pass="$2" || return 1
 
-    dest="$BACKUP_ROOTDIR/mysqldump"
-    mkdir -p $dest
+    tmpdest="$BACKUP_ROOTDIR/mysqldump"
+    mkdir -p $tmpdest
 
     for i in $(mysql -u $user -p$pass -e'show databases;' | grep -v information_schema | grep -v Database); do
-        mysqldump --lock-tables -u $user -p$pass $i > $dest/mysqldump-$i.sql;
+        mysqldump --lock-tables -u $user -p$pass $i > "$tmpdest/mysqldump-$i.sql";
     done;
-    backup "$dest" "$BACKUP_ROOTDIR/mysql"
-    rm -rf "$dest"
+    backup "$tmpdest" "$BACKUP_ROOTDIR/mysql"
+    rm -rf "$tmpdest"
     return 0
 }
 
