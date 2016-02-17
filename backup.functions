@@ -47,7 +47,8 @@ lvm_backup()
     
     lvname=$(basename $lvpath)
     vg_lv=$(echo $1 | sed 's#/#-#g')
-    bakname="${lvname}_$(echo $preffix | sed 's#/#_#g')"
+    bakname=${lvname}
+    [[ -n $preffix ]] && bakname="$bakname_$(echo $preffix | sed 's#/#_#g')"
     mnt_snap="/mnt/snap"
     mount_opt="ro"
     local mpoint fstype
