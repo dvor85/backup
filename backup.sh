@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export BACKUP_ROOTDIR=/mnt/backup
-export SELF_DIR=/usr/local/backup
+export SELF_DIR=$(dirname `readlink -f $0`)
 export EXCLUDE="$SELF_DIR/backup.exclude"
 export FUNCTIONS="$SELF_DIR/backup.functions"
 
