@@ -82,7 +82,7 @@ mysql_backup()
     [[ -n $2 ]] && pass="$2" || return 1
 
     tmpdest="$BACKUP_ROOTDIR/${FUNCNAME[0]}"
-    mkdir -p $tmpdest
+    mkdir -p "$tmpdest"
 
     for i in $(mysql -u $user -p$pass -e'show databases;' | grep -v information_schema | grep -v Database); do
         mysqldump --lock-tables -u $user -p$pass $i > "$tmpdest/mysqldump-$i.sql";
@@ -95,7 +95,7 @@ mysql_backup()
 apt_backup()
 {
     tmpdest="$BACKUP_ROOTDIR/${FUNCNAME[0]}"
-    mkdir -p $tmpdest
+    mkdir -p "$tmpdest"
 
     dpkg --get-selections > "$tmpdest/dpkg_selections"
     dpkg --print-foreign-architectures > "$tmpdest/dpkg_altarch"
