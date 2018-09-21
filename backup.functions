@@ -35,6 +35,7 @@ backup()
 	.; 
     cd "$BACKUP_ROOTDIR"
     ln -fns "$DEST_DIR" "$ROOT_DIR/last"
+    chown -R $USER $DEST_DIR
 
     prev_week="$ROOT_DIR/$(date -d "$ROTATE $PERIOD ago" +$FORMAT)"
     if [[ -d "$prev_week" ]]; then

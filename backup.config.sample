@@ -1,0 +1,14 @@
+#!/bin/bash
+
+export BACKUP_ROOTDIR=/mnt/backup
+export USER=bak
+
+#Delete archive every $ROTATE $PERIOD
+export ROTATE=2
+
+#Full backup every $PERIOD. In $PERIOD make incremental backup.
+export PERIOD="week"
+
+
+
+
