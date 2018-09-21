@@ -1,0 +1,14 @@
+#!/bin/bash
+
+. $FUNCTIONS
+
+BACKUP_ROOTDIR="/home/demon/bak/$(lsb_release -sd)"
+PERIOD="day"
+
+tmpdest="$BACKUP_ROOTDIR/settings"
+
+mkdir -p "$tmpdest/etc"
+cp -arfx /etc/fstab /etc/sudoers /etc/sudoers.d/ /etc/bash.bashrc /etc/NetworkManager/ "$tmpdest/etc/"
+
+backup "$tmpdest" etc && rm -rf "$tmpdest"
+apt_backup 
