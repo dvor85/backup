@@ -32,7 +32,7 @@ backup()
 	--exclude-backups \
 	--exclude-from="$EXCLUDE" \
 	--index-file="$DEST_DIR/$FILE_DATE.log" \
-	.; 
+	. > /dev/null; 
     cd "$BACKUP_ROOTDIR"
     ln -fns "$DEST_DIR" "$ROOT_DIR/last"
     chown -R $USER $DEST_DIR
