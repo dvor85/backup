@@ -1,8 +1,8 @@
 #!/bin/bash
 
-FROM="$1"
+FROM=`readlink -f "$1"`
 MASK="$2"
-TO="$3"
+TO=`readlink -f "$3"`
 
 usage()
 {
