@@ -37,10 +37,9 @@ backup()
     ln -fns "$DEST_DIR" "$ROOT_DIR/last"
     chown -R $USER $DEST_DIR
 
-    prev_week="$ROOT_DIR/$(date -d "$ROTATE $PERIOD ago" +$FORMAT)"
-    if [[ -d "$prev_week" ]]; then
-        rm -rf "$prev_week"
-    fi
+    #delete old archives
+    find "$ROOT_DIR" -type d -ctime +$((`date +%-j`-`date -d "$ROTATE $PERIOD ago" +%-j`)) -exec rm -rf {} \;
+
     return 0;
 }
 
