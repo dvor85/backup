@@ -38,7 +38,8 @@ backup()
     chown -R $USER $DEST_DIR
 
     #delete old archives
-    find "$ROOT_DIR" -type d -ctime +$((`date +%-j`-`date -d "$ROTATE $PERIOD ago" +%-j`)) -exec rm -rf {} \;
+
+    find "$ROOT_DIR" -type d -ctime +$(( (`date +%-s`-`date -d "$ROTATE $PERIOD ago" +%-s`) / 86400 )) -exec rm -rf {} \;
 
     return 0;
 }
