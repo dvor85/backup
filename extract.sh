@@ -15,7 +15,7 @@ usage()
 
 extract_one()
 {
-    echo "ectract from $1"
+    echo "extract "$MASK" from $1"
     if cd "$TO"; then
         tar --extract --recursion --preserve-permissions --totals --sparse --ignore-failed-read --gzip \
         --listed-incremental=/dev/null \

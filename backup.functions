@@ -39,7 +39,7 @@ backup()
 
     #delete old archives
 
-    find "$ROOT_DIR" -type d -ctime +$(( (`date +%-s`-`date -d "$ROTATE $PERIOD ago" +%-s`) / 86400 )) -exec rm -rf {} \;
+    find "$ROOT_DIR" -type d -mtime +$(( (`date +%-s`-`date -d "$ROTATE $PERIOD ago" +%-s`) / 86400 )) -exec rm -rf {} \;
 
     return 0;
 }
