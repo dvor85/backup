@@ -35,7 +35,7 @@ backup()
 	. > /dev/null; 
     cd "$BACKUP_ROOTDIR"
     ln -fns "$DEST_DIR" "$ROOT_DIR/last"
-    chown -R $USER $DEST_DIR
+    chown -R $USER:$GROUP "$BACKUP_ROOTDIR"
 
     #delete old archives
 

@@ -2,8 +2,8 @@
 
 . $FUNCTIONS
 
-BACKUP_ROOTDIR="/home/demon/bak/$(lsb_release -sd)"
-PERIOD="day"
+#BACKUP_ROOTDIR="$BACKUP_ROOTDIR"
+#PERIOD="day"
 
 tmpdest="$BACKUP_ROOTDIR/settings"
 
